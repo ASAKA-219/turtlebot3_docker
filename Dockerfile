@@ -69,13 +69,14 @@ RUN sudo rosdep init
 # pip install
 #RUN pip install setuptools==58.2.0
 #RUN pip install simpleaudio
-RUN apt update && apt install -y ros-noetic-smach-ros ros-dev-tools ros-noetic-joy
+RUN apt update && apt install -y ros-noetic-smach-ros ros-dev-tools ros-noetic-joy \
+    ros-noetic-turtlebot3* ros-noetic-gmapping ros-noetic-gazebo-ros-pkgs
 
 # create ws
 RUN mkdir -p /home/${USER_NAME}/catkin_ws/src
 
 ### package setting is here
-RUN sudo apt update; sudo apt install -y ros-noetic-turtlebot3* ros-noetic-gmapping
+RUN sudo apt update; sudo apt install -y 
 ###
 
 # user setting
