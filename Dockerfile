@@ -1,4 +1,4 @@
-FROM nvidia/cuda:12.1.0-runtime-ubuntu22.04
+FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
 SHELL ["/bin/bash", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -15,7 +15,10 @@ RUN apt update \
 ENV LANG ja_JP.UTF-8
 ENV TZ=Asia/Tokyo
 
-# packages install
+# keyboard setting
+RUN apt install -y  -o Dpkg::Options::="--force-confdef" -o Dpkg::Options::="--force-confold" keyboard-configuration
+
+# basic packages install
 RUN apt-get update && apt-get install -y \
   build-essential \
   cmake \
@@ -25,9 +28,9 @@ RUN apt-get update && apt-get install -y \
   python3-pip \
   python3-tk \
   git wget curl unzip \
-  x11-utils x11-apps terminator xterm xauth \
+  x11-utils x11-apps terminator xauth \
   xterm nano vim htop \
-  build-essential software-properties-common gdb valgrind sudo \
+  software-properties-common gdb valgrind sudo \
   python3-venv lsb-release zlib1g
 
 # Add user and group
@@ -39,74 +42,71 @@ ARG PASSWORD
 ARG PKGS_PATH_RLT
 
 RUN groupadd -g ${GID} ${GROUP_NAME} && \
-    #groupadd -g ${GID} dialout && \
     useradd -m -s /bin/bash -u ${UID} -g ${GID} -G sudo ${USER_NAME} && \
     echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 WORKDIR /home/${USER_NAME}
 
-# ROS2 install
-RUN apt update \
-  && apt install -y --no-install-recommends \
-     curl gnupg2 lsb-release python3-pip vim wget build-essential ca-certificates git python3.10-venv
-RUN curl -sSL https://raw.githubusercontent.com/ros/rosdistro/master/ros.key -o /usr/share/keyrings/ros-archive-keyring.gpg \
-  && echo "deb [arch=$(dpkg --print-architecture) signed-by=/usr/share/keyrings/ros-archive-keyring.gpg] http://packages.ros.org/ros2/ubuntu $(lsb_release -cs) main" | tee /etc/apt/sources.list.d/ros2.list > /dev/null
-RUN apt update \
-  && apt upgrade -y \
-  && DEBIAN_FRONTEND=noninteractive \
-  && apt install -y --no-install-recommends \
-     ros-humble-desktop-full \
-     git
-RUN apt update && apt install -y \
-    python3-flake8-docstrings \
-    python3-pip \
-    python3-pytest-cov \
-    ros-dev-tools \
-    ros-humble-smach-ros \
-    python3-flake8-blind-except \
-    python3-flake8-builtins \
-    python3-flake8-class-newline \
-    python3-flake8-comprehensions \
-    python3-flake8-deprecated \
-    python3-flake8-import-order \
-    python3-flake8-quotes \
-    python3-pytest-repeat \
-    python3-pytest-rerunfailures
-# pip install
-RUN pip install setuptools==58.2.0
-RUN pip install simpleaudio
+# ROS noetic install
+RUN echo "debug"
+RUN DEBIAN_FRONTEND=noninteractive ;\
+    sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' ;\
+    curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add - ;\
+    sudo apt update ;\
+    sudo apt install -y ros-noetic-desktop \
+    python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential \
+    python3-osrf-pycommon python3-catkin-tools;\
+    echo "source /opt/ros/noetic/setup.bash" >> /home/${USER_NAME}/.bashrc
+RUN sudo rosdep init
 
-RUN echo "source /opt/ros/humble/setup.bash" >> /home/${USER_NAME}/.bashrc
-RUN echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc
-RUN rosdep init
+#RUN apt update && apt install -y \
+    #python3-flake8-docstrings \
+#    python3-pip \
+#    python3-pytest-cov \
+#    ros-dev-tools \
+#    ros-noetic-smach-ros \
+    #python3-pytest-repeat \
+    #python3-pytest-rerunfailures
+# pip install
+#RUN pip install setuptools==58.2.0
+#RUN pip install simpleaudio
+RUN apt update && apt install -y ros-noetic-smach-ros ros-dev-tools
 
 # create ws
-RUN mkdir -p /colcon_ws/src
+RUN mkdir -p /home/${USER_NAME}/catkin_ws/src
 
 ### package setting is here
-RUN sudo apt update; sudo apt install -y ros-humble-turtlebot3*
+RUN sudo apt update; sudo apt install -y ros-noetic-turtlebot3* ros-noetic-gmapping
 ###
 
 # user setting
 RUN usermod -aG dialout ${USER_NAME}
 # ps1
-RUN echo "PS1='\[\033[47;30m\]HUMBLE\[\033[0m\]@\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
+RUN echo "PS1='\[\033[44;37m\]NOETIC\[\033[0m\]@\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
 # build
-COPY turtlebot3_common /colcon_ws/src/turtlebot3_common
-RUN chmod -R 777 /colcon_ws
+
+RUN chmod -R 777 /home/${USER_NAME}/catkin_ws
 USER ${USER_NAME}
-RUN cd /colcon_ws ;\
-    sudo apt update ;\
+#RUN cd /home/${USER_NAME}/catkin_ws ;\
+#    sudo apt update ;\
+#    rosdep update ;\
+#    rosdep install -y -i --from-path src --rosdistro noetic
+RUN cd /home/${USER_NAME}/catkin_ws/src/ ;\
+    source /opt/ros/noetic/setup.bash ;\
+    catkin_create_pkg turtlebot3_common std_msgs rospy roscpp joy geometry_msgs ;\
+#    cd turtlebot3_common ;\
+    sudo apt remove -y ros-noetic-turtlebot3 ;\
+    git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlebot3_simulations.git ;\
+    cd ../ && catkin build ;\
+    echo 'source ~/catkin_ws/devel/setup.bash' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export TURTLEBOT3_PLAT=false' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export LDS_MODEL=LDS-01' >> /home/${USER_NAME}/.bashrc
+RUN echo 'export TURTLEBOT3_MODEL=burger' >> /home/${USER_NAME}/.bashrc ;\
     rosdep update ;\
-    rosdep install -y -i --from-path src --rosdistro humble
-RUN cd /colcon_ws ;\
-    source /opt/ros/humble/setup.bash ;\
-    colcon build --symlink-install ;\
-    echo "source /colcon_ws/install/setup.bash" >> /home/${USER_NAME}/.bashrc
-RUN echo "export TURTLEBOT3_MODEL=burger" >> /home/${USER_NAME}/.bashrc
+    rosdep install -y -i --from-paths /home/${USER_NAME}/catkin_ws/src/ --ignore-src --rosdistro noetic
 
 # entrypoint
 COPY assets/setup.sh /tmp/setup.sh
 COPY assets/nanorc /home/${USER_NAME}/.nanorc
-RUN sudo chmod +x /tmp/setup.sh
-WORKDIR /colcon_ws
+RUN sudo chmod +x /tmp/setup.sh ; echo 'export ROS_MASTER_URI=http://172.17.0.1:11311' >> /home/${USER_NAME}/.bashrc
+WORKDIR /home/${USER_NAME}/catkin_ws
 ENTRYPOINT ["/tmp/setup.sh"]

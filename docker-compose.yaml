@@ -1,8 +1,8 @@
 version: "3"
 services:
-  turtlebot3:
-    container_name: humble-tb3
-    image: humble:tb3
+  turtlebot3_noetic:
+    container_name: noetic-tb3
+    image: noetic:tb3
     privileged: true
     build:
       context: .
@@ -17,19 +17,18 @@ services:
       - PULSE_COOKIE=/tmp/pulseaudio.cookie
     volumes:
        - /tmp/.X11-unix:/tmp/.X11-unix
-       #- /tmp/pulseaudio.socket:/tmp/pulseaudio.socket
-       #- /tmp/pulseaudio.client.conf:/etc/pulse/client.conf
        - $HOME/.Xauthority/:/root/.Xauthority
+         #source: ~/catkin_ws/src/turtlebot3_common
        - /dev:/dev
-       - ./turtlebot3_common:/colcon_ws/src/turtlebot3_common
-       #- $PKGS_PATH_ABS:/colcon_ws/src/extra_pkgs
+#       - /home/asakayusuke/turtlebot_noetic_docker/turtlebot3_common:/home/${USER_NAME}/catkin_ws/src/turtlebot3_common
+       - /home/asakayusuke/turtlebot_noetic_docker/tb3_common:/home/${USER_NAME}/catkin_ws/src/tb3_common
+       - /home/asakayusuke/turtlebot_noetic_docker/tb3_navigation:/home/${USER_NAME}/catkin_ws/src/tb3_navigation
+
     devices:
        - /dev:/dev
-    ipc: host
+    ipc: "host"
     network_mode: host
     tty: true
     stdin_open: true
     user: "${UID}:${GID}"
-    #command: /bin/bash -c "source ~/.bashrc; export TURTLEBOT3_MODEL=burger; ros2 launch turtlebot3_gazebo turtlebot3_world.launch.py"
-    #command: /bin/bash -c "source ~/.bashrc; ros2 launch tb3_common turtlebot3_sim_minimum_bringup.launch.py"
     command: /bin/bash

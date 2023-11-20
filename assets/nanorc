@@ -2,5 +2,6 @@ set linenumbers
 set tabsize 4
 set autoindent
 set mouse
+set smooth
 set tabstospaces
 include "/usr/share/nano/*.nanorc"
