@@ -75,34 +75,44 @@ RUN apt update && apt install -y ros-noetic-smach-ros ros-dev-tools ros-noetic-j
 # create ws
 RUN mkdir -p /home/${USER_NAME}/catkin_ws/src
 
-### package setting is here
-#RUN sudo apt update; sudo apt install -y 
-###
-
 # user setting
 RUN usermod -aG dialout ${USER_NAME}
 # ps1
-RUN echo "PS1='\[\033[44;37m\]NOETIC\[\033[0m\]@\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
+RUN echo "PS1='\[\033[44;37m\]NOETIC\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
 
 # build
 RUN chmod -R 777 /home/${USER_NAME}/catkin_ws
 USER ${USER_NAME}
-COPY tb3_common /home/${USER_NAME}/catkin_ws/src/tb3_common
-COPY tb3_navigation /home/${USER_NAME}/catkin_ws/src/tb3_navigation
+
 RUN cd /home/${USER_NAME}/catkin_ws/src/ ;\
     source /opt/ros/noetic/setup.bash ;\
-    git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlebot3_simulations.git ;\
-    cd ../ && catkin build ;\
-    echo 'source ~/catkin_ws/devel/setup.bash' >> /home/${USER_NAME}/.bashrc ;\
+    git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlbot3_simulations.git ;\
     echo 'export TURTLEBOT3_PLAT=false' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export LDS_MODEL=LDS-01' >> /home/${USER_NAME}/.bashrc
-RUN echo 'export TURTLEBOT3_MODEL=burger' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export LDS_MODEL=LDS-01' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export TURTLEBOT3_MODEL=burger' >> /home/${USER_NAME}/.bashrc
+    
+COPY tb3_common /home/${USER_NAME}/catkin_ws/src/tb3_common
+COPY image.py /home/${USER_NAME}/image.py
+COPY tb3_navigation /home/${USER_NAME}/catkin_ws/src/tb3_navigation
+RUN cd /home/${USER_NAME}/catkin_ws ;\
+    source /opt/ros/noetic/setup.bash ;\
     rosdep update ;\
-    rosdep install -y -i --from-paths /home/${USER_NAME}/catkin_ws/src/ --ignore-src --rosdistro noetic
+    rosdep install -y -i --from-paths src --rosdistro noetic ;\
+    catkin build 
+
+RUN mkdir -p fuzzy_planner/src
+COPY fuzzy_planner /home/${USER_NAME}/fuzzy_planner/src/fuzzy_planner
+RUN cd /home/${USER_NAME}/fuzzy_planner ;\
+    catkin_make ;\
+    echo 'source ~/fuzzy_planner/devel/setup.bash' >> /home/${USER_NAME}/.bashrc 
 
 # entrypoint
 COPY assets/setup.sh /tmp/setup.sh
 COPY assets/nanorc /home/${USER_NAME}/.nanorc
-RUN sudo chmod +x /tmp/setup.sh ; echo 'export ROS_MASTER_URI=http://yusuke:11311' >> /home/${USER_NAME}/.bashrc
+COPY map.yaml /home/${USER_NAME}/map.yaml
+COPY map.pgm /home/${USER_NAME}/map.pgm
+RUN sudo chmod +x /tmp/setup.sh ;\
+    echo 'source ~/catkin_ws/devel/setup.bash' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export ROS_MASTER_URI=http://yusuke:11311' >> /home/${USER_NAME}/.bashrc
 WORKDIR /home/${USER_NAME}/catkin_ws
 ENTRYPOINT ["/tmp/setup.sh"]
