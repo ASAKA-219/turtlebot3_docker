@@ -1,2 +1,2 @@
 #!/bin/bash
-docker compose up -d --build turtlebot3_noetic ;docker compose exec turtlebot3_noetic /bin/bash
+docker compose up -d turtlebot3_kinetic ;docker compose exec turtlebot3_kinetic /bin/bash

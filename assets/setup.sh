@@ -2,6 +2,6 @@
 set -e
 
 echo "setup finish"
-source /opt/ros/noetic/setup.bash
+source /opt/ros/kinetic/setup.bash
 source ~/.bashrc
 exec "$@"

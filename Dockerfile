@@ -1,4 +1,4 @@
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
+FROM ubuntu:16.04
 SHELL ["/bin/bash", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -23,10 +23,10 @@ RUN apt-get update && apt-get install -y \
   build-essential \
   cmake \
   g++ \
-  iproute2 gnupg gnupg1 gnupg2 \
+  iproute2 gnupg gnupg2 \
   libcanberra-gtk* \
-  python3-pip \
-  python3-tk \
+  python-pip \
+  python-tk \
   git wget curl unzip \
   x11-utils x11-apps terminator xauth \
   xterm nano vim htop \
@@ -46,73 +46,41 @@ RUN groupadd -g ${GID} ${GROUP_NAME} && \
     echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 WORKDIR /home/${USER_NAME}
 
-# ROS noetic install
+# ROS kinetic install
 RUN echo "debug"
 RUN DEBIAN_FRONTEND=noninteractive ;\
     sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' ;\
     curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add - ;\
     sudo apt update ;\
-    sudo apt install -y ros-noetic-desktop \
-    python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential \
-    python3-osrf-pycommon python3-catkin-tools;\
-    echo "source /opt/ros/noetic/setup.bash" >> /home/${USER_NAME}/.bashrc
-RUN sudo rosdep init
+    sudo apt install -y ros-kinetic-desktop \
+    python-rosdep python-rosinstall python-rosinstall-generator python-vcstools build-essential \
+    python-osrf-pycommon python-catkin-tools;\
+    echo "source /opt/ros/kinetic/setup.bash" >> /home/${USER_NAME}/.bashrc
+RUN sudo rosdep init ; rosdep update
 
-#RUN apt update && apt install -y \
-    #python3-flake8-docstrings \
-#    python3-pip \
-#    python3-pytest-cov \
-#    ros-dev-tools \
-#    ros-noetic-smach-ros \
-    #python3-pytest-repeat \
-    #python3-pytest-rerunfailures
-# pip install
-#RUN pip install setuptools==58.2.0
-#RUN pip install simpleaudio
-RUN apt update && apt install -y ros-noetic-smach-ros ros-dev-tools ros-noetic-joy \
-    ros-noetic-turtlebot3* ros-noetic-gmapping ros-noetic-gazebo-ros-pkgs
+RUN apt update && apt install -y  ros-kinetic-joy ros-kinetic-dynamixel-sdk ros-kinetic-ros-control* ros-kinetic-control* ros-kinetic-moveit*\
+    ros-kinetic-turtlebot3* ros-kinetic-gmapping ros-kinetic-gazebo-ros-* ros-kinetic-ar-track-alvar ros-kinetic-ar-track-alvar-msgs ros-kinetic-joint-state-publisher-gui
 
 # create ws
-RUN mkdir -p /home/${USER_NAME}/catkin_ws/src
+RUN mkdir -p /home/${USER_NAME}/catkin_ws/src 
 
 # user setting
 RUN usermod -aG dialout ${USER_NAME}
 # ps1
-RUN echo "PS1='\[\033[44;37m\]NOETIC\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
+RUN echo "PS1='\[\033[44;37m\]KINETIC\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
 
 # build
 RUN chmod -R 777 /home/${USER_NAME}/catkin_ws
 USER ${USER_NAME}
 
 RUN cd /home/${USER_NAME}/catkin_ws/src/ ;\
-    source /opt/ros/noetic/setup.bash ;\
-    git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlbot3_simulations.git ;\
-    echo 'export TURTLEBOT3_PLAT=false' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export LDS_MODEL=LDS-01' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export TURTLEBOT3_MODEL=burger' >> /home/${USER_NAME}/.bashrc
+    source /opt/ros/kinetic/setup.bash
     
-COPY tb3_common /home/${USER_NAME}/catkin_ws/src/tb3_common
-COPY image.py /home/${USER_NAME}/image.py
-COPY tb3_navigation /home/${USER_NAME}/catkin_ws/src/tb3_navigation
-RUN cd /home/${USER_NAME}/catkin_ws ;\
-    source /opt/ros/noetic/setup.bash ;\
-    rosdep update ;\
-    rosdep install -y -i --from-paths src --rosdistro noetic ;\
-    catkin build 
-
-RUN mkdir -p fuzzy_planner/src
-COPY fuzzy_planner /home/${USER_NAME}/fuzzy_planner/src/fuzzy_planner
-RUN cd /home/${USER_NAME}/fuzzy_planner ;\
-    catkin_make ;\
-    echo 'source ~/fuzzy_planner/devel/setup.bash' >> /home/${USER_NAME}/.bashrc 
-
 # entrypoint
 COPY assets/setup.sh /tmp/setup.sh
 COPY assets/nanorc /home/${USER_NAME}/.nanorc
-COPY map.yaml /home/${USER_NAME}/map.yaml
-COPY map.pgm /home/${USER_NAME}/map.pgm
 RUN sudo chmod +x /tmp/setup.sh ;\
-    echo 'source ~/catkin_ws/devel/setup.bash' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export ROS_MASTER_URI=http://yusuke:11311' >> /home/${USER_NAME}/.bashrc
+    echo 'source ~/catkin_ws/devel/setup.bash' >> /home/${USER_NAME}/.bashrc
+    #echo 'export ROS_MASTER_URI=http://yusuke:11311' >> /home/${USER_NAME}/.bashrc
 WORKDIR /home/${USER_NAME}/catkin_ws
 ENTRYPOINT ["/tmp/setup.sh"]
