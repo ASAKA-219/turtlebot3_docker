@@ -86,27 +86,26 @@ RUN sudo apt update; sudo apt install -y ros-humble-turtlebot3* ;\
     sudo apt install -y ros-humble-rqt-tf-tree ;\
     sudo apt install -y ros-humble-cartographer ros-humble-cartographer-ros ros-humble-navigation2 ros-humble-nav2-bringup \
     ros-humble-dynamixel-sdk ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gripper-controllers ros-humble-moveit \
-    ros-humble-moveit-servo ros-humble-gazebo-* ros-humble-realsense2-camera-msgs ros-humble-realsense2-description 
-###
+    ros-humble-moveit-servo ros-humble-gazebo-* ros-humble-realsense2-camera-msgs ros-humble-realsense2-description &&\
 
-# user setting
-RUN usermod -aG dialout ${USER_NAME}
+    usermod -aG dialout ${USER_NAME} &&\
 # ps1
-RUN echo "PS1='\[\033[47;30m\]HUMBLE\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
+    echo "PS1='\[\033[47;30m\]HUMBLE\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc &&\
 # build
-RUN chmod -R 777 /home/${USER_NAME}/colcon_ws
+    chmod -R 777 /home/${USER_NAME}/colcon_ws
 USER ${USER_NAME}
 RUN cd /home/${USER_NAME}/colcon_ws/src ;\
     git clone -b humble-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlebot3_lime.git ;\
     git clone https://github.com/ldrobotSensorTeam/ldlidar_stl_ros2.git ;\
-    git clone -b foxy-devel https://github.com/pal-robotics/realsense_gazebo_plugin.git
+    git clone -b foxy-devel https://github.com/pal-robotics/realsense_gazebo_plugin.git &&\
     
-RUN cd /home/${USER_NAME}/colcon_ws ;\
+    cd /home/${USER_NAME}/colcon_ws ;\
     . /opt/ros/humble/setup.bash ;\
     rosdep update ;\
     rosdep install -y -i --from-path src --rosdistro humble ;\
     colcon build --symlink-install ;\
     echo "source ~/colcon_ws/install/setup.bash" >> /home/${USER_NAME}/.bashrc
+    echo "source /usr/share/gazebo/setup.sh" >> /home/${USER_NAME}/.bashrc
 
 # entrypoint
 COPY assets/setup.sh /tmp/setup.sh
