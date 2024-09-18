@@ -25,4 +25,3 @@ services:
     stdin_open: true
     user: "${UID}:${GID}"
     command: /bin/bash
-
