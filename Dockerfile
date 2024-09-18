@@ -93,6 +93,7 @@ RUN sudo apt update; sudo apt install -y ros-humble-turtlebot3* ;\
     echo "PS1='\[\033[47;30m\]HUMBLE\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc &&\
 # build
     chmod -R 777 /home/${USER_NAME}/colcon_ws
+
 USER ${USER_NAME}
 RUN cd /home/${USER_NAME}/colcon_ws/src ;\
     git clone -b humble-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlebot3_lime.git ;\
