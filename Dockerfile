@@ -85,7 +85,7 @@ RUN mkdir -p /home/${USER_NAME}/colcon_ws/src
 RUN apt update　;\
     apt install -y ros-humble-cartographer ros-humble-cartographer-ros ros-humble-navigation2 ros-humble-nav2-bringup \
     ros-humble-dynamixel-sdk ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gripper-controllers ros-humble-moveit \
-    ros-humble-moveit-servo ros-humble-gazebo-* ros-humble-realsense2-camera-msgs ros-humble-realsense2-description &&\
+    ros-humble-moveit-servo ros-humble-gazebo-* ros-humble-realsense2-camera-msgs ros-humble-realsense2-description ros-humble-rtabmap-ros &&\
     usermod -aG dialout ${USER_NAME} &&\
 # ps1
     echo "PS1='\[\033[48;5;10m\]TB3_LIME\[\033[0m\]@\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc &&\
