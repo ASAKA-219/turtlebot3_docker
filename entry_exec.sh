@@ -1,6 +1,6 @@
 #!/bin/bash
-image_name="humble:tb3"
-container="turtlebot3"
+image_name="humble_tb3:lime"
+container="turtlebot3_lime"
 
 image_exists=$(docker images -q "${image_name}")
 

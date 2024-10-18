@@ -1,4 +1,4 @@
-FROM ubuntu:22.04
+FROM ubuntu:22.04 AS base
 SHELL ["/bin/bash", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -30,6 +30,8 @@ RUN apt-get update && apt-get install -y \
   build-essential software-properties-common gdb valgrind sudo \
   python3-venv lsb-release zlib1g
 
+#------------------------------------------------------------------------------------------
+FROM base AS install_ros
 # Add user and group
 ARG UID
 ARG GID
@@ -52,9 +54,8 @@ RUN apt update \
   && apt upgrade -y \
   && DEBIAN_FRONTEND=noninteractive \
   && apt install -y --no-install-recommends \
-     ros-humble-desktop-full \
-     git
-RUN apt update && apt install -y \
+     ros-humble-desktop-full &&\
+    apt update && apt install -y \
     python3-flake8-docstrings \
     python3-pip \
     python3-pytest-cov \
@@ -75,25 +76,29 @@ RUN pip install setuptools==58.2.0 ;\
 
 RUN echo "source /opt/ros/humble/setup.bash" >> /home/${USER_NAME}/.bashrc ;\
     echo "source /opt/ros/humble/setup.bash" >> /root/.bashrc ;\
-    . /opt/ros/noetic/setup.bash ;\
+    . /opt/ros/humble/setup.bash ;\
     rosdep init
-
-# create ws
-RUN mkdir -p /home/${USER_NAME}/colcon_ws/src
 
 ### package setting is here
 RUN apt update　;\
     apt install -y ros-humble-cartographer ros-humble-cartographer-ros ros-humble-navigation2 ros-humble-nav2-bringup \
     ros-humble-dynamixel-sdk ros-humble-ros2-control ros-humble-ros2-controllers ros-humble-gripper-controllers ros-humble-moveit \
-    ros-humble-moveit-servo ros-humble-gazebo-* ros-humble-realsense2-camera-msgs ros-humble-realsense2-description &&\
-    usermod -aG dialout ${USER_NAME} &&\
+    ros-humble-moveit-servo ros-humble-gazebo-* ros-humble-realsense2-camera-msgs ros-humble-realsense2-description 
+
+#--------------------------------------------------------------------------------------------------------------------
+FROM install_ros AS install_git
+# create ws
+RUN mkdir -p /home/${USER_NAME}/colcon_ws/src ;\
+    usermod -aG dialout ${USER_NAME} ;\
 # ps1
     echo "PS1='\[\033[48;5;10m\]TB3_LIME\[\033[0m\]@\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc &&\
     chmod -R 777 /home/${USER_NAME}/colcon_ws
 
 USER ${USER_NAME}
+WORKDIR /home/${USER_NAME}/colcon_ws
 
-RUN cd /home/${USER_NAME}/colcon_ws/src ;\
+# install source package from git
+RUN cd src ;\
     git clone -b humble-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlebot3_lime.git ;\
     git clone https://github.com/ldrobotSensorTeam/ldlidar_stl_ros2.git ;\
     git clone -b foxy-devel https://github.com/pal-robotics/realsense_gazebo_plugin.git &&\
@@ -109,5 +114,5 @@ RUN cd /home/${USER_NAME}/colcon_ws/src ;\
 COPY assets/setup.sh /tmp/setup.sh
 COPY assets/nanorc /home/${USER_NAME}/.nanorc
 RUN sudo chmod +x /tmp/setup.sh
-WORKDIR /home/${USER_NAME}/colcon_ws
+
 ENTRYPOINT ["/tmp/setup.sh"]
