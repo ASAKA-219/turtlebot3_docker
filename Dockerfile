@@ -1,4 +1,5 @@
-FROM nvidia/cuda:11.1.1-cudnn8-devel-ubuntu20.04
+FROM osrf/ros:noetic-desktop
+LABEL maintainer="Asaka Yusuke <yusuke.asaka@gmail.com>"
 SHELL ["/bin/bash", "-c"]
 ARG DEBIAN_FRONTEND=noninteractive
 
@@ -12,7 +13,7 @@ RUN apt update \
   && add-apt-repository universe
 
 # Locale
-ENV LANG ja_JP.UTF-8
+ENV LANG=ja_JP.UTF-8
 ENV TZ=Asia/Tokyo
 
 # keyboard setting
@@ -33,6 +34,24 @@ RUN apt-get update && apt-get install -y \
   software-properties-common gdb valgrind sudo \
   python3-venv lsb-release zlib1g
 
+# ROS noetic install
+RUN apt update &&\
+    apt install -y python3-catkin-tools python3-rosdep \
+    ros-noetic-turtlebot3* ros-noetic-gmapping ros-noetic-gazebo-ros-pkgs &&\
+    rm -rf /etc/ros/rosdep/sources.list.d/20-default.list && rosdep init
+
+#RUN apt update && apt install -y \
+    #python3-flake8-docstrings \
+#    python3-pip \
+#    python3-pytest-cov \
+#    ros-dev-tools \
+#    ros-noetic-smach-ros \
+    #python3-pytest-repeat \
+    #python3-pytest-rerunfailures
+# pip install
+#RUN pip install setuptools==58.2.0
+#RUN pip install simpleaudio    
+
 # Add user and group
 ARG UID
 ARG GID
@@ -46,73 +65,43 @@ RUN groupadd -g ${GID} ${GROUP_NAME} && \
     echo "${USER_NAME} ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
 WORKDIR /home/${USER_NAME}
 
-# ROS noetic install
-RUN echo "debug"
-RUN DEBIAN_FRONTEND=noninteractive ;\
-    sudo sh -c 'echo "deb http://packages.ros.org/ros/ubuntu $(lsb_release -sc) main" > /etc/apt/sources.list.d/ros-latest.list' ;\
-    curl -s https://raw.githubusercontent.com/ros/rosdistro/master/ros.asc | sudo apt-key add - ;\
-    sudo apt update ;\
-    sudo apt install -y ros-noetic-desktop \
-    python3-rosdep python3-rosinstall python3-rosinstall-generator python3-wstool build-essential \
-    python3-osrf-pycommon python3-catkin-tools;\
-    echo "source /opt/ros/noetic/setup.bash" >> /home/${USER_NAME}/.bashrc
-RUN sudo rosdep init
-
-#RUN apt update && apt install -y \
-    #python3-flake8-docstrings \
-#    python3-pip \
-#    python3-pytest-cov \
-#    ros-dev-tools \
-#    ros-noetic-smach-ros \
-    #python3-pytest-repeat \
-    #python3-pytest-rerunfailures
-# pip install
-#RUN pip install setuptools==58.2.0
-#RUN pip install simpleaudio
-RUN apt update && apt install -y ros-noetic-smach-ros ros-dev-tools ros-noetic-joy \
-    ros-noetic-turtlebot3* ros-noetic-gmapping ros-noetic-gazebo-ros-pkgs
+USER ${USER_NAME}
 
 # create ws
-RUN mkdir -p /home/${USER_NAME}/catkin_ws/src
-
-# user setting
-RUN usermod -aG dialout ${USER_NAME}
-# ps1
-RUN echo "PS1='\[\033[44;37m\]NOETIC\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc
-
-# build
-RUN chmod -R 777 /home/${USER_NAME}/catkin_ws
-USER ${USER_NAME}
+RUN mkdir -p /home/${USER_NAME}/catkin_ws/src && pip install setuptools==58.2.0 &&\
+    chmod -R 777 /home/${USER_NAME}/catkin_ws &&\
+    echo "source /opt/ros/noetic/setup.bash" >> /home/${USER_NAME}/.bashrc &&\
+    source /home/${USER_NAME}/.bashrc &&\
+    cd /home/${USER_NAME}/catkin_ws ;\
+    rosdep update ; rosdep install -iy --from-paths src
 
 RUN cd /home/${USER_NAME}/catkin_ws/src/ ;\
     source /opt/ros/noetic/setup.bash ;\
     git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlbot3_simulations.git ;\
+    echo "export PS1='\[\033[44;37m\]NOETIC\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc &&\
     echo 'export TURTLEBOT3_PLAT=false' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export LDS_MODEL=LDS-01' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export LDS_MODEL=LDS-02' >> /home/${USER_NAME}/.bashrc ;\
     echo 'export TURTLEBOT3_MODEL=burger' >> /home/${USER_NAME}/.bashrc
     
 COPY tb3_common /home/${USER_NAME}/catkin_ws/src/tb3_common
-COPY image.py /home/${USER_NAME}/image.py
-COPY tb3_navigation /home/${USER_NAME}/catkin_ws/src/tb3_navigation
-RUN cd /home/${USER_NAME}/catkin_ws ;\
+RUN sudo apt update && sudo apt-get install -y ros-noetic-joy ros-noetic-teleop-twist-joy \
+  ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc \
+  ros-noetic-rgbd-launch ros-noetic-rosserial-arduino \
+  ros-noetic-rosserial-python ros-noetic-rosserial-client \
+  ros-noetic-rosserial-msgs ros-noetic-amcl ros-noetic-map-server \
+  ros-noetic-move-base ros-noetic-urdf ros-noetic-xacro \
+  ros-noetic-compressed-image-transport ros-noetic-rqt* ros-noetic-rviz \
+  ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers \
+    ros-noetic-dynamixel-sdk ros-noetic-turtlebot3-msgs ros-noetic-turtlebot3 &&\
+    
+    cd /home/${USER_NAME}/catkin_ws ;\
     source /opt/ros/noetic/setup.bash ;\
-    rosdep update ;\
-    rosdep install -y -i --from-paths src --rosdistro noetic ;\
     catkin build 
 
-RUN mkdir -p fuzzy_planner/src
-COPY fuzzy_planner /home/${USER_NAME}/fuzzy_planner/src/fuzzy_planner
-RUN cd /home/${USER_NAME}/fuzzy_planner ;\
-    catkin_make ;\
-    echo 'source ~/fuzzy_planner/devel/setup.bash' >> /home/${USER_NAME}/.bashrc 
-
 # entrypoint
-COPY assets/setup.sh /tmp/setup.sh
+COPY assets/setup.sh /tmp/entry_point.sh
 COPY assets/nanorc /home/${USER_NAME}/.nanorc
-COPY map.yaml /home/${USER_NAME}/map.yaml
-COPY map.pgm /home/${USER_NAME}/map.pgm
-RUN sudo chmod +x /tmp/setup.sh ;\
-    echo 'source ~/catkin_ws/devel/setup.bash' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export ROS_MASTER_URI=http://yusuke:11311' >> /home/${USER_NAME}/.bashrc
+RUN echo 'source ~/catkin_ws/devel/setup.bash' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export ROS_MASTER_URI=http://localhost:11311' >> /home/${USER_NAME}/.bashrc
 WORKDIR /home/${USER_NAME}/catkin_ws
-ENTRYPOINT ["/tmp/setup.sh"]
+ENTRYPOINT ["/tmp/entry_point.sh"]

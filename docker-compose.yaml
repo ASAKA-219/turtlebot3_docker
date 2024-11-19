@@ -1,4 +1,3 @@
-version: "3"
 services:
   turtlebot3_noetic:
     container_name: noetic-tb3
@@ -18,15 +17,11 @@ services:
     volumes:
        - /tmp/.X11-unix:/tmp/.X11-unix
        - $HOME/.Xauthority/:/root/.Xauthority
-         #source: ~/catkin_ws/src/turtlebot3_common
        - /dev:/dev
-#       - /home/asakayusuke/turtlebot_noetic_docker/turtlebot3_common:/home/${USER_NAME}/catkin_ws/src/turtlebot3_common
        - /home/asakayusuke/turtlebot_noetic_docker/tb3_common:/home/${USER_NAME}/catkin_ws/src/tb3_common
-       - /home/asakayusuke/turtlebot_noetic_docker/tb3_navigation:/home/${USER_NAME}/catkin_ws/src/tb3_navigation
-
     devices:
        - /dev:/dev
-    ipc: "host"
+    ipc: host
     network_mode: host
     tty: true
     stdin_open: true
