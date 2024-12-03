@@ -1,7 +1,7 @@
 services:
-  turtlebot3_lime:
-    container_name: humble-tb3-lime
-    image: humble_tb3:lime
+  turtlebot3_burger:
+    container_name: humble-tb3
+    image: humble_tb3:burger
     build:
       context: .
       args:
