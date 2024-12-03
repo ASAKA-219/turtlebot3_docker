@@ -34,7 +34,7 @@ RUN apt-get update && apt-get install -y \
   software-properties-common gdb valgrind sudo \
   python3-venv lsb-release zlib1g
 
-# ROS noetic install
+# ros neccessary package install
 RUN apt update &&\
     apt install -y python3-catkin-tools python3-rosdep \
     ros-noetic-turtlebot3* ros-noetic-gmapping ros-noetic-gazebo-ros-pkgs &&\
@@ -77,7 +77,13 @@ RUN mkdir -p /home/${USER_NAME}/catkin_ws/src && pip install setuptools==58.2.0 
 
 RUN cd /home/${USER_NAME}/catkin_ws/src/ ;\
     source /opt/ros/noetic/setup.bash ;\
-    git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlbot3_simulations.git ;\
+    git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlbot3_simulations_jp_custom.git ;\
+    git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlebot3_jp_custom.git ;\
+    git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git ;\
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git ;\
+    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git ;\
+    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git ;\
+    sudo apt update ; sudo apt install -y ros-noetic-ros-control* ros-noetic-control* ros-noetic-moveit* ;\
     echo "export PS1='\[\033[44;37m\]NOETIC\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc &&\
     echo 'export TURTLEBOT3_PLAT=false' >> /home/${USER_NAME}/.bashrc ;\
     echo 'export LDS_MODEL=LDS-02' >> /home/${USER_NAME}/.bashrc ;\
@@ -85,14 +91,14 @@ RUN cd /home/${USER_NAME}/catkin_ws/src/ ;\
     
 COPY tb3_common /home/${USER_NAME}/catkin_ws/src/tb3_common
 RUN sudo apt update && sudo apt-get install -y ros-noetic-joy ros-noetic-teleop-twist-joy \
-  ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc \
-  ros-noetic-rgbd-launch ros-noetic-rosserial-arduino \
-  ros-noetic-rosserial-python ros-noetic-rosserial-client \
-  ros-noetic-rosserial-msgs ros-noetic-amcl ros-noetic-map-server \
-  ros-noetic-move-base ros-noetic-urdf ros-noetic-xacro \
-  ros-noetic-compressed-image-transport ros-noetic-rqt* ros-noetic-rviz \
-  ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers \
-    ros-noetic-dynamixel-sdk ros-noetic-turtlebot3-msgs ros-noetic-turtlebot3 &&\
+    ros-noetic-teleop-twist-keyboard ros-noetic-laser-proc \
+    ros-noetic-rgbd-launch ros-noetic-rosserial-arduino \
+    ros-noetic-rosserial-python ros-noetic-rosserial-client \
+    ros-noetic-rosserial-msgs ros-noetic-amcl ros-noetic-map-server \
+    ros-noetic-move-base ros-noetic-urdf ros-noetic-xacro \
+    ros-noetic-compressed-image-transport ros-noetic-rqt* ros-noetic-rviz \
+    ros-noetic-gmapping ros-noetic-navigation ros-noetic-interactive-markers \
+    ros-noetic-dynamixel-sdk &&\
     
     cd /home/${USER_NAME}/catkin_ws ;\
     source /opt/ros/noetic/setup.bash ;\
