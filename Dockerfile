@@ -103,7 +103,8 @@ RUN cd /home/${USER_NAME}/colcon_ws/src ;\
     rosdep install -y -i --from-path src --rosdistro humble ;\
     colcon build --symlink-install ;\
     echo "source ~/colcon_ws/install/setup.bash" >> /home/${USER_NAME}/.bashrc &&\
-    echo "source /usr/share/gazebo/setup.sh" >> /home/${USER_NAME}/.bashrc
+    echo "source /usr/share/gazebo/setup.sh" >> /home/${USER_NAME}/.bashrc &&\
+    echo 'source /usr/share/gazebo-11/setup.sh' >> ~/.bashrc
 
 # entrypoint
 COPY assets/setup.sh /tmp/setup.sh
