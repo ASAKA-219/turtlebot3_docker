@@ -3,6 +3,6 @@ set -e
 
 echo "setup finish"
 source /opt/ros/humble/setup.bash
-source ~/.bashrc
+source $HOME/.bashrc
 exec "$@"
 
