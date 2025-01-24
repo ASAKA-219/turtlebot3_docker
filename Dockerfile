@@ -80,14 +80,14 @@ RUN cd /home/${USER_NAME}/catkin_ws/src/ ;\
     git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlbot3_simulations_jp_custom.git ;\
     git clone -b noetic-jp-devel https://github.com/ROBOTIS-JAPAN-GIT/turtlebot3_jp_custom.git ;\
     git clone -b noetic-devel https://github.com/ROBOTIS-GIT/turtlebot3_msgs.git ;\
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git ;\
-    git clone https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git ;\
-    git clone https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git ;\
-    sudo apt update ; sudo apt install -y ros-noetic-ros-control* ros-noetic-control* ros-noetic-moveit* ;\
+    git clone -b noetic https://github.com/ROBOTIS-GIT/turtlebot3_manipulation.git ;\
+    git clone -b noetic https://github.com/ROBOTIS-GIT/turtlebot3_manipulation_simulations.git ;\
+    git clone -b noetic https://github.com/ROBOTIS-GIT/open_manipulator_dependencies.git ;\
+    sudo apt update ; sudo apt install -y ros-noetic-ros-control* ros-noetic-control* ros-noetic-moveit* ros-noetic-dwa-local-planner;\
     echo "export PS1='\[\033[44;37m\]NOETIC\[\033[0m\]:\[\033[32m\]\u\[\033[0m\]:\[\033[1;33m\]\w\[\033[0m\]$ '" >> /home/${USER_NAME}/.bashrc &&\
-    echo 'export TURTLEBOT3_PLAT=false' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export LDS_MODEL=LDS-02' >> /home/${USER_NAME}/.bashrc ;\
-    echo 'export TURTLEBOT3_MODEL=burger' >> /home/${USER_NAME}/.bashrc
+    echo 'export TURTLEBOT3_PLAT=true' >> /home/${USER_NAME}/.bashrc ;\
+    echo 'export LDS_MODEL=LDS-01' >> /home/${USER_NAME}/.bashrc 
+    #echo 'export TURTLEBOT3_MODEL=burger' >> /home/${USER_NAME}/.bashrc
     
 COPY tb3_common /home/${USER_NAME}/catkin_ws/src/tb3_common
 RUN sudo apt update && sudo apt-get install -y ros-noetic-joy ros-noetic-teleop-twist-joy \
